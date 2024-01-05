@@ -1,0 +1,45 @@
+name: 'Release'
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment:
+      name: vscode-marketplace
+    steps:
+    - uses: 'actions/checkout@v4'
+
+    - uses: 'actions/setup-node@v4'
+      with:
+        node-version: 18.x
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+
+    - run: |
+        set -eux
+
+        npm ci --prefer-offline
+        make wasm
+      env:
+        GH_TOKEN: ${{ github.token }}
+      name: Install Dependencies
+
+    - run: |
+        npm run package
+      name: Package Extension
+
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v4
+      with:
+        name: 'vsix'
+        path: '*.vsix'
+        if-no-files-found: error
+
+    - name: 'Publish Extension'
+      run: |
+        npm run deploy
+      env:
+        VSCE_PAT: ${{ secrets.VSCODE_PAT }}
