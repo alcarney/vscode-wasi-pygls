@@ -21,6 +21,7 @@
     "scripts": {
         "watch": "npx tsc -p . -w",
     },
+    "main": "dist/node/extension",
     "extensionDependencies": [
         "ms-vscode.wasm-wasi-core"
     ],
