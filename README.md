@@ -1,4 +1,4 @@
-# vscode-wasi-pygls
+# vscode-wasi-pygls [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/swyddfa.pygls-wasi-playground?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=swyddfa.pygls-wasi-playground)
 
 <p align="center">
   <img src="./screenshot.png" alt="A screenshot showing an example pygls language server running on vscode.dev via the WASI host."></img>
