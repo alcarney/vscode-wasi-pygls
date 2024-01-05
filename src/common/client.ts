@@ -1,0 +1,192 @@
+import * as vscode from "vscode";
+import { ProcessOptions, Stdio, Wasm, WasmProcess } from "@vscode/wasm-wasi";
+import { BaseLanguageClient, LanguageClientOptions, State } from "vscode-languageclient";
+
+export type ClientFactory = (id: string, clientOptions: LanguageClientOptions, process: WasmProcess) => BaseLanguageClient
+
+export class PyglsClient {
+    private clientStarting = false
+    private client: BaseLanguageClient | undefined
+
+    constructor(
+        private context: vscode.ExtensionContext,
+        private clientFactory: ClientFactory,
+        private logger: vscode.LogOutputChannel,
+        private stderr: vscode.OutputChannel,
+    ) {
+        this.registerEventHandlers()
+    }
+
+    public async start() {
+        // Don't interfere if we are already in the process of launching the server.
+        if (this.clientStarting) {
+            return
+        }
+
+        this.clientStarting = true
+        if (this.client) {
+            await this.stop()
+        }
+
+        const serverPath = this.getServerPath()
+        const process = await this.createServerProcess(serverPath)
+        this.client = this.clientFactory('pygls', this.getClientOptions(), process);
+
+        try {
+            await this.client.start()
+            this.clientStarting = false
+        } catch (err) {
+            this.clientStarting = false
+            this.logger.error(`Unable to start server: ${err}`)
+        }
+
+    }
+
+    /**
+     * Stop the currently running server and client.
+     * @returns
+     */
+    public async stop(): Promise<void> {
+        if (!this.client) {
+            return
+        }
+
+        if (this.client.state === State.Running) {
+            await this.client.stop()
+        }
+
+        this.client.dispose()
+        this.client = undefined
+    }
+
+    /**
+     * Start the wasm process that will host the server.
+     */
+    private async createServerProcess(serverPath: string): Promise<WasmProcess> {
+
+    }
+
+    /**
+     * Return the set of options to pass to VSCode's language client.
+     * @returns
+     */
+    private getClientOptions(): LanguageClientOptions {
+        const config = vscode.workspace.getConfiguration('pygls.client')
+        const options = {
+            documentSelector: config.get<any>('documentSelector'),
+            outputChannel: this.logger,
+            connectionOptions: {
+                maxRestartCount: 0 // don't restart on server failure.
+            },
+        };
+        this.logger.appendLine(`client options: ${JSON.stringify(options, undefined, 2)}`)
+        return options
+    }
+
+    /**
+     *
+     * @returns The python script to launch the server with
+     */
+    private getServerPath(): string {
+        const config = vscode.workspace.getConfiguration("pygls.server")
+        const server = config.get<string>('launchScript')
+        return server || ''
+    }
+
+    /**
+     * Execute a command defined by the language server.
+     * @returns
+     */
+    private async executeServerCommand() {
+
+        if (!this.client || this.client.state !== State.Running) {
+            await vscode.window.showErrorMessage("There is no language server running.")
+            return
+        }
+
+        const knownCommands = this.client.initializeResult?.capabilities.executeCommandProvider?.commands
+        if (!knownCommands || knownCommands.length === 0) {
+            const info = this.client.initializeResult?.serverInfo
+            const name = info?.name || "Server"
+            const version = info?.version || ""
+
+            await vscode.window.showInformationMessage(`${name} ${version} does not implement any commands.`)
+            return
+        }
+
+        const commandName = await vscode.window.showQuickPick(knownCommands, { canPickMany: false })
+        if (!commandName) {
+            return
+        }
+        this.logger.info(`executing command: '${commandName}'`)
+
+        const result = await vscode.commands.executeCommand(commandName /* if your command accepts arguments you can pass them here */)
+        this.logger.info(`${commandName} result: ${JSON.stringify(result, undefined, 2)}`)
+    }
+
+
+    /**
+     * Register all the event handlers we need
+     * @param context
+     */
+    private registerEventHandlers() {
+        const context = this.context
+
+        // Restart language server command
+        context.subscriptions.push(
+            vscode.commands.registerCommand("pygls.server.restart", async () => {
+                this.logger.appendLine('restarting server...')
+                await this.start()
+            })
+        )
+
+        // Execute command... command
+        context.subscriptions.push(
+            vscode.commands.registerCommand("pygls.server.executeCommand", this.executeServerCommand, this)
+        )
+
+        // ... or if they change a relevant config option
+        context.subscriptions.push(
+            vscode.workspace.onDidChangeConfiguration(async (event) => {
+                if (event.affectsConfiguration("pygls.server") || event.affectsConfiguration("pygls.client")) {
+                    this.logger.appendLine('config modified, restarting server...')
+                    await this.start()
+                }
+            })
+        )
+
+        // Start the language server once the user opens the first text document...
+        context.subscriptions.push(
+            vscode.workspace.onDidOpenTextDocument(
+                async () => {
+                    if (!this.client) {
+                        await this.start()
+                    }
+                }
+            )
+        )
+
+        // ...or notebook.
+        context.subscriptions.push(
+            vscode.workspace.onDidOpenNotebookDocument(
+                async () => {
+                    if (!this.client) {
+                        await this.start()
+                    }
+                }
+            )
+        )
+
+        // Restart the server if the user modifies it.
+        context.subscriptions.push(
+            vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
+                const expectedUri = vscode.Uri.file(this.getServerPath())
+
+                if (expectedUri.toString() === document.uri.toString()) {
+                    this.logger.appendLine('server modified, restarting...')
+                    await this.start()
+                }
+            })
+        )
+    }
+}
