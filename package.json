@@ -1,0 +1,30 @@
+{
+    "name": "pygls-wasi-playground",
+    "displayName": "pygls WASI playground",
+    "description": "An experiment for running pygls powered language servers in VSCcode's WASI host",
+    "repository": {
+        "url": "https://github.com/alcarney/vscode-wasi-pygls"
+    },
+    "author": "Alex Carney",
+    "publisher": "swyddfa",
+    "license": "MIT",
+    "version": "0.1.0",
+    "keywords": [
+        "wasm",
+        "pygls",
+        "wasi",
+        "language server"
+    ],
+    "categories": [
+        "Programming Languages"
+    ],
+    "extensionDependencies": [
+        "ms-vscode.wasm-wasi-core"
+    ],
+    "dependencies": {
+        "@vscode/wasm-wasi": "0.13.0-pre.1",
+    },
+    "engines": {
+        "vscode": "^1.78.0"
+    },
+}
