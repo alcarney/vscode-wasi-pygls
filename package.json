@@ -20,7 +20,10 @@
     ],
     "scripts": {
         "watch": "npx tsc -p . -w",
-        "compile": "node esbuild.mjs"
+        "compile": "node esbuild.mjs",
+        "deploy": "vsce publish --pre-release -i *.vsix --baseImagesUrl https://github.com/alcarney/vscode-wasi-pygls/raw/main",
+        "package": "vsce package --pre-release --baseImagesUrl https://github.com/alcarney/vscode-wasi-pygls/raw/main",
+        "vscode:prepublish": "npm run compile"
     },
     "main": "dist/node/extension",
     "browser": "dist/web/extension",
@@ -34,6 +37,7 @@
     "devDependencies": {
         "@types/node": "^18.19.4",
         "@types/vscode": "1.78.0",
+        "@vscode/vsce": "^2.22.0",
         "esbuild": "^0.19.11",
         "typescript": "^5.3.3"
     },

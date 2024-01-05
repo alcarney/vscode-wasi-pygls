@@ -1,0 +1,10 @@
+**/__pycache__/**
+**/.pyc
+**/requirements.in
+**/requirements.txt
+.vscode
+dist/**/*.map
+node_modules
+src/**
+tsconfig.json
+esbuild.mjs
