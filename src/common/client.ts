@@ -28,7 +28,7 @@ export class PyglsClient {
             await this.stop()
         }
 
-        const serverPath = this.getServerPath()
+        const serverPath = `/workspace/${this.getServerPath()}`
         const process = await this.createServerProcess(serverPath)
         this.client = this.clientFactory('pygls', this.getClientOptions(), process);
 
@@ -63,7 +63,38 @@ export class PyglsClient {
      * Start the wasm process that will host the server.
      */
     private async createServerProcess(serverPath: string): Promise<WasmProcess> {
+        const wasm = await Wasm.load()
+        const stdio: Stdio = {
+            in: { kind: 'pipeIn' },
+            out: { kind: 'pipeOut' },
+            err: { kind: 'pipeOut' },
+        }
 
+        const options: ProcessOptions = {
+            stdio: stdio,
+            mountPoints: [
+                { kind: 'workspaceFolder' },
+                { kind: 'extensionLocation', extension: this.context, path: 'wasm/lib', mountPoint: '/usr/local/lib' }
+            ],
+            env: {
+                PYTHONUNBUFFERED: '1',
+                PYTHONPATH: '/workspace',
+            },
+            args: [serverPath]
+        }
+
+        const filename = vscode.Uri.joinPath(this.context.extensionUri, "wasm", "python.wasm")
+        const bits = await vscode.workspace.fs.readFile(filename)
+        const module = await WebAssembly.compile(bits)
+        const process = await wasm.createProcess('pygls-server', module, { initial: 160, maximum: 160, shared: true }, options)
+
+        // Throws errors on the web to do with SharedArrayBuffers and COI...
+        // const decoder = new TextDecoder('utf-8')
+        // process.stderr!.onData((data) => {
+        //     this.stderr.append(decoder.decode(data))
+        // })
+
+        return process
     }
 
     /**
