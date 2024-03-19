@@ -88,11 +88,11 @@ export class PyglsClient {
         const module = await WebAssembly.compile(bits)
         const process = await wasm.createProcess('pygls-server', module, { initial: 160, maximum: 160, shared: true }, options)
 
-        // Throws errors on the web to do with SharedArrayBuffers and COI...
-        // const decoder = new TextDecoder('utf-8')
-        // process.stderr!.onData((data) => {
-        //     this.stderr.append(decoder.decode(data))
-        // })
+        // Might throw errors on the web to do with SharedArrayBuffers and COI...
+        const decoder = new TextDecoder('utf-8')
+        process.stderr!.onData((data) => {
+            this.stderr.append(decoder.decode(data))
+        })
 
         return process
     }
