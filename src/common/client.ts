@@ -211,11 +211,17 @@ export class PyglsClient {
         // Restart the server if the user modifies it.
         context.subscriptions.push(
             vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
-                const expectedUri = vscode.Uri.file(this.getServerPath())
+                if (!vscode.workspace.workspaceFolders) {
+                    return
+                }
+                const documentUri = document.uri.toString()
 
-                if (expectedUri.toString() === document.uri.toString()) {
-                    this.logger.appendLine('server modified, restarting...')
-                    await this.start()
+                for (let workspaceFolder of vscode.workspace.workspaceFolders) {
+                    let serverUri = vscode.Uri.joinPath(workspaceFolder.uri, this.getServerPath())
+                    if (serverUri.toString() === documentUri) {
+                        this.logger.appendLine('server modified, restarting...')
+                        await this.start()
+                    }
                 }
             })
         )
