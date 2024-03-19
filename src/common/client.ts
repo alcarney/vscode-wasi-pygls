@@ -88,11 +88,11 @@ export class PyglsClient {
         const module = await WebAssembly.compile(bits)
         const process = await wasm.createProcess('pygls-server', module, { initial: 160, maximum: 160, shared: true }, options)
 
-        // Throws errors on the web to do with SharedArrayBuffers and COI...
-        // const decoder = new TextDecoder('utf-8')
-        // process.stderr!.onData((data) => {
-        //     this.stderr.append(decoder.decode(data))
-        // })
+        // Might throw errors on the web to do with SharedArrayBuffers and COI...
+        const decoder = new TextDecoder('utf-8')
+        process.stderr!.onData((data) => {
+            this.stderr.append(decoder.decode(data))
+        })
 
         return process
     }
@@ -211,11 +211,17 @@ export class PyglsClient {
         // Restart the server if the user modifies it.
         context.subscriptions.push(
             vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
-                const expectedUri = vscode.Uri.file(this.getServerPath())
+                if (!vscode.workspace.workspaceFolders) {
+                    return
+                }
+                const documentUri = document.uri.toString()
 
-                if (expectedUri.toString() === document.uri.toString()) {
-                    this.logger.appendLine('server modified, restarting...')
-                    await this.start()
+                for (let workspaceFolder of vscode.workspace.workspaceFolders) {
+                    let serverUri = vscode.Uri.joinPath(workspaceFolder.uri, this.getServerPath())
+                    if (serverUri.toString() === documentUri) {
+                        this.logger.appendLine('server modified, restarting...')
+                        await this.start()
+                    }
                 }
             })
         )

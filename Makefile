@@ -1,7 +1,9 @@
 .PHONY: wasm
 
-PYTHON_VERSION=3.12.1
+PYTHON_VERSION=3.12.2
 WASI_VERSION=wasi_sdk-20
+
+wasm: wasm/lib.dir.json
 
 wasm/python.wasm:
 	gh release download v$(PYTHON_VERSION) \
@@ -25,5 +27,3 @@ wasm/lib.dir.json: wasm/python.wasm requirements.txt
 		-r requirements.txt
 
 	npx dir-dump wasm/lib/ --out wasm/lib.dir.json
-
-wasm: wasm/lib.dir.json

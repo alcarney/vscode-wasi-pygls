@@ -10,6 +10,6 @@ attrs==23.2.0
     #   lsprotocol
 cattrs==23.2.3
     # via lsprotocol
-lsprotocol==2023.0.0
+lsprotocol==2023.0.1
     # via pygls
 pygls @ git+https://github.com/alcarney/pygls.git@jsonrpc-server
