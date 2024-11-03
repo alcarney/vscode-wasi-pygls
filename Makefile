@@ -1,8 +1,13 @@
+PYTHON_VERSION=3.13.0
+WASI_VERSION=wasi_sdk-24
+
+
+.PHONY: dist
+dist: wasm
+	-test -d dist && rm -r dist
+	npm run package
+
 .PHONY: wasm
-
-PYTHON_VERSION=3.12.2
-WASI_VERSION=wasi_sdk-20
-
 wasm: wasm/lib.dir.json
 
 wasm/python.wasm:
@@ -15,15 +20,33 @@ wasm/python.wasm:
 
 	rm /tmp/python-$(PYTHON_VERSION)-$(WASI_VERSION).zip
 
-wasm/lib.dir.json: wasm/python.wasm requirements.txt
+wasm/lib.dir.json: wasm/python.wasm requirements.txt node_modules/.installed
 	pip install \
-		--target wasm/lib/python3.12/site-packages \
+		--target wasm/lib/python3.13/site-packages \
 		--only-binary :all: \
 		--implementation py \
 		--abi none \
 		--platform any \
-		--python-version "3.12" \
+		--python-version "3.13" \
 		--upgrade \
 		-r requirements.txt
 
+	pip install \
+		--target wasm/lib/python3.13/site-packages \
+		--only-binary :all: \
+		--implementation py \
+		--abi none \
+		--platform any \
+		--python-version "3.13" \
+		--upgrade \
+		git+https://github.com/openlawlibrary/pygls.git@main
+
 	npx dir-dump wasm/lib/ --out wasm/lib.dir.json
+
+requirements.txt: requirements.in
+	hatch run deps:update
+
+
+node_modules/.installed: package.json package-lock.json
+	npm install
+	touch $@
