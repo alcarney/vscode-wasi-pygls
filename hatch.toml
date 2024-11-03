@@ -1,0 +1,10 @@
+[envs.deps]
+python = "3.13"
+dependencies = ["pip-tools"]
+skip-install = true
+
+[envs.deps.scripts]
+update = [
+    "python --version",
+    "pip-compile --resolver=backtracking --generate-hashes --upgrade requirements.in --output-file requirements.txt",
+]
