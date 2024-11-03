@@ -58,11 +58,11 @@ jobs:
       with:
         name: 'vsix'
         path: '.'
-        if-no-files-found: error
 
     - name: 'Publish Extension'
       run: |
         ls -l
+        npm ci
         npm run deploy
       env:
         VSCE_PAT: ${{ secrets.VSCODE_PAT }}
