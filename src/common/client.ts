@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ProcessOptions, Stdio, Wasm, WasmProcess } from "@vscode/wasm-wasi";
+import { ProcessOptions, Stdio, Wasm, WasmProcess } from "@vscode/wasm-wasi/v1";
 import { BaseLanguageClient, LanguageClientOptions, State } from "vscode-languageclient";
 
 export type ClientFactory = (id: string, clientOptions: LanguageClientOptions, process: WasmProcess) => BaseLanguageClient
