@@ -4,32 +4,32 @@ on:
     branches:
     - main
 
+  pull_request:
+    branches:
+    - main
+
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: vscode-marketplace
     steps:
     - uses: 'actions/checkout@v4'
 
+    - uses: 'actions/setup-python@v5'
+      with:
+        python-version: '3.13'
+
     - uses: 'actions/setup-node@v4'
       with:
-        node-version: 18.x
+        node-version: 20.x
         cache: 'npm'
         cache-dependency-path: 'package-lock.json'
 
     - run: |
         set -eux
-
-        npm ci --prefer-offline
-        make wasm
+        make dist
       env:
         GH_TOKEN: ${{ github.token }}
-      name: Install Dependencies
-
-    - run: |
-        npm run package
-      name: Package Extension
+      name: Build
 
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v4
@@ -38,8 +38,30 @@ jobs:
         path: '*.vsix'
         if-no-files-found: error
 
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    environment:
+      name: vscode-marketplace
+    steps:
+    - uses: 'actions/checkout@v4'
+
+    - uses: 'actions/setup-node@v4'
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+
+    - name: 'Download Artifact'
+      uses: actions/upload-artifact@v4
+      with:
+        name: 'vsix'
+        path: '.'
+        if-no-files-found: error
+
     - name: 'Publish Extension'
       run: |
+        ls -l
         npm run deploy
       env:
         VSCE_PAT: ${{ secrets.VSCODE_PAT }}

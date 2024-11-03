@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.2 - 2024-11-03
+
+- Update `@vscode/wasm-wasi` to `v1.0.1`
+- Update Python to 3.13
+- Switch to upstream `pygls`! 🎉
+
 ## v0.1.1 - 2024-03-19
 
 - The extension should now automatically restart the server when the source is modified

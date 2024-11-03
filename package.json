@@ -8,7 +8,7 @@
     "author": "Alex Carney",
     "publisher": "swyddfa",
     "license": "MIT",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "keywords": [
         "wasm",
         "pygls",
@@ -31,7 +31,7 @@
         "ms-vscode.wasm-wasi-core"
     ],
     "dependencies": {
-        "@vscode/wasm-wasi": "0.13.0-pre.1",
+        "@vscode/wasm-wasi": "^1",
         "vscode-languageclient": "^9.0.1"
     },
     "devDependencies": {
