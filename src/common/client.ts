@@ -130,6 +130,7 @@ export class PyglsClient {
         const options = {
             documentSelector: config.get<any>('documentSelector'),
             outputChannel: this.logger,
+            progressOnInitialization: true,
             connectionOptions: {
                 maxRestartCount: 0 // don't restart on server failure.
             },
