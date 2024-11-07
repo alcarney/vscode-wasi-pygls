@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.0 - 2024-11-07
+
+- Use `@vscode/wasm-wasi-lsp`
+- URIs sent to the language server now align to the filesystem it can see, rather than aligning with the host's filesystem.
+
 ## v0.1.2 - 2024-11-03
 
 - Update `@vscode/wasm-wasi` to `v1.0.1`

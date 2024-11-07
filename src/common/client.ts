@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { ProcessOptions, Stdio, Wasm, WasmProcess } from "@vscode/wasm-wasi/v1";
+import { createUriConverters } from "@vscode/wasm-wasi-lsp"
 import { BaseLanguageClient, LanguageClientOptions, State } from "vscode-languageclient";
 
 export type ClientFactory = (id: string, clientOptions: LanguageClientOptions, process: WasmProcess) => BaseLanguageClient
@@ -109,6 +110,7 @@ export class PyglsClient {
             connectionOptions: {
                 maxRestartCount: 0 // don't restart on server failure.
             },
+            uriConverters: createUriConverters(),
         };
         this.logger.appendLine(`client options: ${JSON.stringify(options, undefined, 2)}`)
         return options
