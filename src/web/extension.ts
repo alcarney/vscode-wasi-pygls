@@ -1,12 +1,10 @@
-
 "use strict";
 
 import * as vscode from "vscode";
-
+import { WasmProcess } from "@vscode/wasm-wasi/v1";
+import { startServer } from "@vscode/wasm-wasi-lsp"
 import { BaseLanguageClient, LanguageClientOptions, MessageTransports } from "vscode-languageclient/browser";
-import { WasmProcess } from "@vscode/wasm-wasi";
 
-import { runServerProcess } from "./server";
 import { PyglsClient } from "../common/client";
 
 let client: PyglsClient | undefined;
@@ -21,7 +19,7 @@ export class LanguageClient extends BaseLanguageClient {
 
 
     protected createMessageTransports(_encoding: string): Promise<MessageTransports> {
-        return runServerProcess(this.process)
+        return startServer(this.process)
     }
 }
 

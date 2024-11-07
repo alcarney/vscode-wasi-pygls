@@ -1,17 +1,17 @@
 "use strict";
 
 import * as vscode from "vscode";
-
+import { WasmProcess } from "@vscode/wasm-wasi/v1";
+import { startServer } from "@vscode/wasm-wasi-lsp";
 import { LanguageClient, LanguageClientOptions, ServerOptions } from "vscode-languageclient/node";
-import { runServerProcess } from "./server";
+
 import { PyglsClient } from "../common/client";
-import { WasmProcess } from "@vscode/wasm-wasi";
 
 let client: PyglsClient | undefined;
 
 function clientFactory(id: string, clientOptions: LanguageClientOptions, process: WasmProcess) {
   const serverOptions: ServerOptions = () => {
-    return runServerProcess(process)
+    return startServer(process)
   }
 
   return new LanguageClient(id, serverOptions, clientOptions)
