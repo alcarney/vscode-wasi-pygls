@@ -1,1 +1,1 @@
-pygls @ git+https://github.com/openlawlibrary/pygls.git@main
+pygls>=2a2
