@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { ProcessOptions, Stdio, Wasm, WasmProcess } from "@vscode/wasm-wasi/v1";
 import { createUriConverters } from "@vscode/wasm-wasi-lsp"
-import { BaseLanguageClient, LanguageClientOptions, State } from "vscode-languageclient";
+import { BaseLanguageClient, CloseAction, CloseHandlerResult, ErrorAction, ErrorHandlerResult, LanguageClientOptions, Message, State } from "vscode-languageclient";
 
 export type ClientFactory = (id: string, clientOptions: LanguageClientOptions, process: WasmProcess) => BaseLanguageClient
 
@@ -41,6 +41,29 @@ export class PyglsClient {
             this.logger.error(`Unable to start server: ${err}`)
         }
 
+    }
+
+    /**
+     * Called when the connection to the server encounters an error
+     */
+    private handleServerError(error: Error, message: Message | undefined, count: number | undefined): ErrorHandlerResult {
+      this.logger.error(`error: ${JSON.stringify(error)}`)
+      this.logger.error(`message: ${JSON.stringify(message)}`)
+      this.logger.error(`count: ${count}`)
+
+      this.clientStarting = false
+      return {
+        action: ErrorAction.Shutdown,
+        message: "Unable to start server, is the `pygls.server.launchScript` option set correctly?"
+      }
+    }
+
+    /**
+     * Called when the connection to the server is closed
+     */
+    private handleConnectionClosed(): CloseHandlerResult {
+      this.logger.error("Connection closed")
+      return { action: CloseAction.DoNotRestart }
     }
 
     /**
@@ -109,6 +132,12 @@ export class PyglsClient {
             outputChannel: this.logger,
             connectionOptions: {
                 maxRestartCount: 0 // don't restart on server failure.
+            },
+            errorHandler: {
+              error: (error: Error, message: Message | undefined, count: number | undefined) => {
+                return this.handleServerError(error, message, count)
+              },
+              closed: () => { return this.handleConnectionClosed() }
             },
             uriConverters: createUriConverters(),
         };
