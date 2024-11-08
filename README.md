@@ -4,8 +4,18 @@
   <img src="./screenshot.png" alt="A screenshot showing an example pygls language server running on vscode.dev via the WASI host."></img>
 </p>
 
-**This is only a tech demo, it make break at any moment.**
+## Usage
 
+It is possible to use this extension in a local version of VSCode however, its primary purpose is to demonstrate that it is possible to run a language server written with [pygls](https://pygls.readthedocs.io/en/latest/index.html) entirely in the browser!
+
+- Open https://vscode.dev/github/openlawlibrary/pygls, you will need to sign into GitHub before the repository's content will load.
+- Install the `swyddfa.pygls-wasi-playground` extension
+- By default, the extension will be configured to launch the `examples/servers/code_action.py` server, though this can be changed by setting the `pygls.server.launchScript` option.
+- Open the `examples/servers/workspace/sums.txt` file
+- Wait for the server to boot up (will take 2-3min to load all the required resources over the network)
+
+This extension is a WASI port of the pygls-playground extension from the upstream project, see the [documentation](https://pygls.readthedocs.io/en/latest/servers/howto/use-the-pygls-playground.html) for more details on its usage.
+Note that some features (like debugging!) have not yet been implemented.
 
 ## Acknowledgements
 
@@ -14,7 +24,6 @@ This stands on the shoulders of a lot of excellent projects and resources, witho
 **Projects**
 
 - [openlawlibrary/pygls](https://github.com/openlawlibrary/pygls): For making it possible to write language servers in Python
-  - **Important Note:** This repo is currently using a random branch of a random fork of the main repo!! See [openlawlibrary/pygls#418](https://github.com/openlawlibrary/pygls/pull/418) for details.
 - [brettcannon/cpython-wasi-build](https://github.com/brettcannon/cpython-wasi-build): For providing the WASI build of CPython
 - [microsoft/vscode-wasm](https://github.com/microsoft/vscode-wasm): For implementing the WASI host in VSCode as well as the following code snippets, showing how to connect everything up
   - [vscode-wasm/testbeds/python/extension.ts](https://github.com/microsoft/vscode-wasm/blob/65669200000306d174ce2bbfdd9e4d41e9517466/testbeds/python/extension.ts#L17-L38)
