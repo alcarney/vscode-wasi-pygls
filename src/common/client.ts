@@ -181,15 +181,16 @@ export class PyglsClient {
             return
         }
 
-        const serverHostUri = vscode.Uri.joinPath(vscode.Uri.file(this.getCwd()), server)
+        const serverHostUri = vscode.Uri.joinPath(this.getCwd(), server)
+        this.logger.info(`Server Host URI: ${serverHostUri}`)
+
         if (forWASI) {
             const serverWASIUri = vscode.Uri.parse(this.code2Protocol(serverHostUri))
-            this.logger.debug(`Server WASI URI: ${serverWASIUri}`)
+            this.logger.info(`Server WASI URI: ${serverWASIUri}`)
 
             return serverWASIUri
         }
 
-        this.logger.debug(`Server Host URI: ${serverHostUri}`)
         return serverHostUri
     }
 
@@ -197,7 +198,7 @@ export class PyglsClient {
      *
      * @returns The working directory from which to launch the server
      */
-    private getCwd(): string {
+    private getCwd(): vscode.Uri {
         const config = vscode.workspace.getConfiguration("pygls.server")
         let cwd = config.get<string>('cwd')
         if (!cwd) {
@@ -216,11 +217,12 @@ export class PyglsClient {
             }
 
             // Assume a single workspace...
-            const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath
-            cwd = cwd.replace(match[0], workspaceFolder)
+            const workspaceFolder = vscode.workspace.workspaceFolders[0].uri
+            cwd = cwd.replace(match[0], workspaceFolder.toString())
         }
 
-        return cwd
+        this.logger.info(`cwd: ${cwd}`)
+        return vscode.Uri.parse(cwd)
     }
 
     /**

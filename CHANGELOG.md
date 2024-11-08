@@ -1,6 +1,10 @@
 # Changelog
 
-## v0.2.0 - 2024-11-07
+## v0.2.1 - 2024-11-08
+
+- Fix URI handling in vscode.dev
+
+## v0.2.0 - 2024-11-08
 
 - Use `@vscode/wasm-wasi-lsp` [#6](https://github.com/alcarney/vscode-wasi-pygls/issues/6)
 - URIs sent to the language server now align to the filesystem it can see, rather than aligning with the host's filesystem.
