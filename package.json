@@ -8,7 +8,7 @@
     "author": "Alex Carney",
     "publisher": "swyddfa",
     "license": "MIT",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "keywords": [
         "wasm",
         "pygls",
@@ -21,8 +21,8 @@
     "scripts": {
         "watch": "npx tsc -p . -w",
         "compile": "node esbuild.mjs",
-        "deploy": "vsce publish --pre-release -i *.vsix --baseImagesUrl https://github.com/alcarney/vscode-wasi-pygls/raw/main",
-        "package": "vsce package --pre-release --baseImagesUrl https://github.com/alcarney/vscode-wasi-pygls/raw/main",
+        "deploy": "vsce publish -i *.vsix --baseImagesUrl https://github.com/alcarney/vscode-wasi-pygls/raw/main",
+        "package": "vsce package --baseImagesUrl https://github.com/alcarney/vscode-wasi-pygls/raw/main",
         "vscode:prepublish": "npm run compile"
     },
     "main": "dist/node/extension",
@@ -38,7 +38,7 @@
     "devDependencies": {
         "@types/node": "^18.19.4",
         "@types/vscode": "1.78.0",
-        "@vscode/vsce": "^2.22.0",
+        "@vscode/vsce": "^3.2.1",
         "esbuild": "^0.19.11",
         "typescript": "^5.3.3"
     },
