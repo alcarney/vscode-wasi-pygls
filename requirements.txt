@@ -20,7 +20,7 @@ lsprotocol==2024.0.0b1 \
     --hash=sha256:93785050ac155ae2be16b1ebfbd74c214feb3d3ef77b10399ce941e5ccef6ebd \
     --hash=sha256:d3667fb70894d361aa6c495c5c8a1b2e6a44be65ff84c21a9cbb67ebfb4830fd
     # via pygls
-# WARNING: pip install will require the following package to be hashed.
-# Consider using a hashable URL like https://github.com/jazzband/pip-tools/archive/SOMECOMMIT.zip
-# pygls @ git+https://github.com/openlawlibrary/pygls.git@main
+pygls==2.0.0a2 \
+    --hash=sha256:03e00634ed8d989918268aaa4b4a0c3ab857ea2d4ee94514a52efa5ddd6d5d9f \
+    --hash=sha256:b202369321409343aa6440d73111d9fa0c22e580466ff1c7696b8358bb91f243
     # via -r requirements.in

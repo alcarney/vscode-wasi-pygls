@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { ProcessOptions, Stdio, Wasm, WasmProcess } from "@vscode/wasm-wasi/v1";
-import { BaseLanguageClient, LanguageClientOptions, State } from "vscode-languageclient";
+import { createUriConverters } from "@vscode/wasm-wasi-lsp"
+import { BaseLanguageClient, CloseAction, CloseHandlerResult, ErrorAction, ErrorHandlerResult, LanguageClientOptions, Message, State } from "vscode-languageclient";
 
 export type ClientFactory = (id: string, clientOptions: LanguageClientOptions, process: WasmProcess) => BaseLanguageClient
 
@@ -8,12 +9,26 @@ export class PyglsClient {
     private clientStarting = false
     private client: BaseLanguageClient | undefined
 
+    private code2Protocol: (value: vscode.Uri) => string;
+    private protocol2Code: (value: string) => vscode.Uri;
+
     constructor(
         private context: vscode.ExtensionContext,
         private clientFactory: ClientFactory,
         private logger: vscode.LogOutputChannel,
         private stderr: vscode.OutputChannel,
     ) {
+
+        let converters = createUriConverters()
+        if (converters) {
+            this.code2Protocol = converters.code2Protocol
+            this.protocol2Code = converters.protocol2Code
+        } else {
+            this.logger.error("Unable to obtain URI converters!")
+            this.code2Protocol = (value: vscode.Uri) => value.toString()
+            this.protocol2Code = (value: string) => vscode.Uri.parse(value)
+        }
+
         this.registerEventHandlers()
     }
 
@@ -28,8 +43,12 @@ export class PyglsClient {
             await this.stop()
         }
 
-        const serverPath = `/workspace/${this.getServerPath()}`
-        const process = await this.createServerProcess(serverPath)
+        const serverUri = this.getServerUri(true)
+        if (!serverUri) {
+            return
+        }
+
+        const process = await this.createServerProcess(serverUri.fsPath)
         this.client = this.clientFactory('pygls', this.getClientOptions(), process);
 
         try {
@@ -40,6 +59,29 @@ export class PyglsClient {
             this.logger.error(`Unable to start server: ${err}`)
         }
 
+    }
+
+    /**
+     * Called when the connection to the server encounters an error
+     */
+    private handleServerError(error: Error, message: Message | undefined, count: number | undefined): ErrorHandlerResult {
+        this.logger.error(`error: ${JSON.stringify(error)}`)
+        this.logger.error(`message: ${JSON.stringify(message)}`)
+        this.logger.error(`count: ${count}`)
+
+        this.clientStarting = false
+        return {
+            action: ErrorAction.Shutdown,
+            message: "Unable to start server, is the `pygls.server.launchScript` option set correctly?"
+        }
+    }
+
+    /**
+     * Called when the connection to the server is closed
+     */
+    private handleConnectionClosed(): CloseHandlerResult {
+        this.logger.error("Connection closed")
+        return { action: CloseAction.DoNotRestart }
     }
 
     /**
@@ -106,8 +148,19 @@ export class PyglsClient {
         const options = {
             documentSelector: config.get<any>('documentSelector'),
             outputChannel: this.logger,
+            progressOnInitialization: true,
             connectionOptions: {
                 maxRestartCount: 0 // don't restart on server failure.
+            },
+            errorHandler: {
+                error: (error: Error, message: Message | undefined, count: number | undefined) => {
+                    return this.handleServerError(error, message, count)
+                },
+                closed: () => { return this.handleConnectionClosed() }
+            },
+            uriConverters: {
+                code2Protocol: this.code2Protocol,
+                protocol2Code: this.protocol2Code,
             },
         };
         this.logger.appendLine(`client options: ${JSON.stringify(options, undefined, 2)}`)
@@ -115,13 +168,59 @@ export class PyglsClient {
     }
 
     /**
+     * Return the URI to the file that defines the server implementation to run.
      *
+     * @param forWASI If set, return the URI to use for the wasi host.
      * @returns The python script to launch the server with
      */
-    private getServerPath(): string {
+    private getServerUri(forWASI?: boolean): vscode.Uri | undefined {
         const config = vscode.workspace.getConfiguration("pygls.server")
         const server = config.get<string>('launchScript')
-        return server || ''
+        if (!server) {
+            this.logger.error("No server configured")
+            return
+        }
+
+        const serverHostUri = vscode.Uri.joinPath(vscode.Uri.file(this.getCwd()), server)
+        if (forWASI) {
+            const serverWASIUri = vscode.Uri.parse(this.code2Protocol(serverHostUri))
+            this.logger.debug(`Server WASI URI: ${serverWASIUri}`)
+
+            return serverWASIUri
+        }
+
+        this.logger.debug(`Server Host URI: ${serverHostUri}`)
+        return serverHostUri
+    }
+
+    /**
+     *
+     * @returns The working directory from which to launch the server
+     */
+    private getCwd(): string {
+        const config = vscode.workspace.getConfiguration("pygls.server")
+        let cwd = config.get<string>('cwd')
+        if (!cwd) {
+            const message = "Please set a working directory via the `pygls.server.cwd` setting"
+            this.logger.error(message)
+            throw new Error(message)
+        }
+
+        // Check for ${workspaceFolder} etc.
+        const match = cwd.match(/^\${(\w+)}/)
+        if (match && (match[1] === 'workspaceFolder' || match[1] === 'workspaceRoot')) {
+            if (!vscode.workspace.workspaceFolders) {
+                const message = "The 'pygls-playground' extension requires an open workspace"
+                this.logger.error(message)
+                throw new Error(message)
+            }
+
+            // Assume a single workspace...
+            const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath
+            cwd = cwd.replace(match[0], workspaceFolder)
+        }
+
+        return cwd
     }
 
     /**
@@ -215,14 +314,17 @@ export class PyglsClient {
                     return
                 }
                 const documentUri = document.uri.toString()
+                const serverUri = this.getServerUri()
 
-                for (let workspaceFolder of vscode.workspace.workspaceFolders) {
-                    let serverUri = vscode.Uri.joinPath(workspaceFolder.uri, this.getServerPath())
-                    if (serverUri.toString() === documentUri) {
-                        this.logger.appendLine('server modified, restarting...')
-                        await this.start()
-                    }
+                if (!serverUri) {
+                    return
                 }
+
+                if (serverUri.toString() === documentUri) {
+                    this.logger.appendLine('server modified, restarting...')
+                    await this.start()
+                }
+
             })
         )
     }
