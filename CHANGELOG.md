@@ -5,6 +5,7 @@
 - Use `@vscode/wasm-wasi-lsp` [#6](https://github.com/alcarney/vscode-wasi-pygls/issues/6)
 - URIs sent to the language server now align to the filesystem it can see, rather than aligning with the host's filesystem.
 - The extension is now able to restart the server after encountering an error [#5](https://github.com/alcarney/vscode-wasi-pygls/issues/5)
+- The extension now respects the value of `pygls.server.cwd`
 
 ## v0.1.2 - 2024-11-03
 
