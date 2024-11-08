@@ -43,22 +43,38 @@ export class PyglsClient {
             await this.stop()
         }
 
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Launching server...",
+                cancellable: false,
+            },
+            (progress, token) => {
+                return new Promise<void>(resolve => {
+                    this.doStart(resolve)
+                });
+            }
+        )
+    }
+
+    private async doStart(resolve: () => void) {
         const serverUri = this.getServerUri(true)
         if (!serverUri) {
             return
         }
 
         const process = await this.createServerProcess(serverUri.fsPath)
-        this.client = this.clientFactory('pygls', this.getClientOptions(), process);
+        this.client = this.clientFactory('pygls', this.getClientOptions(resolve), process);
 
         try {
             await this.client.start()
+            resolve()
             this.clientStarting = false
         } catch (err) {
             this.clientStarting = false
+            resolve()
             this.logger.error(`Unable to start server: ${err}`)
         }
-
     }
 
     /**
@@ -141,9 +157,10 @@ export class PyglsClient {
 
     /**
      * Return the set of options to pass to VSCode's language client.
+     * @param resolve A resolve function to call in the case of an error, which will dismiss the progress indicator
      * @returns
      */
-    private getClientOptions(): LanguageClientOptions {
+    private getClientOptions(resolve: () => void): LanguageClientOptions {
         const config = vscode.workspace.getConfiguration('pygls.client')
         const options = {
             documentSelector: config.get<any>('documentSelector'),
@@ -154,9 +171,12 @@ export class PyglsClient {
             },
             errorHandler: {
                 error: (error: Error, message: Message | undefined, count: number | undefined) => {
+                    resolve()
                     return this.handleServerError(error, message, count)
                 },
-                closed: () => { return this.handleConnectionClosed() }
+                closed: () => {
+                    return this.handleConnectionClosed()
+                }
             },
             uriConverters: {
                 code2Protocol: this.code2Protocol,

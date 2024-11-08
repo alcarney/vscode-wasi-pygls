@@ -3,6 +3,7 @@
 ## v0.2.1 - 2024-11-08
 
 - Fix URI handling in vscode.dev
+- Show progress indication while the server is starting [#4](https://github.com/alcarney/vscode-wasi-pygls/issues/4)
 
 ## v0.2.0 - 2024-11-08
 
