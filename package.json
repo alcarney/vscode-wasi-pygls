@@ -8,7 +8,7 @@
     "author": "Alex Carney",
     "publisher": "swyddfa",
     "license": "MIT",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "keywords": [
         "wasm",
         "pygls",
@@ -36,11 +36,11 @@
         "vscode-languageclient": "*"
     },
     "devDependencies": {
-        "@types/node": "^18.19.4",
+        "@types/node": "^20.14.8",
         "@types/vscode": "1.78.0",
-        "@vscode/vsce": "^3.2.1",
-        "esbuild": "^0.19.11",
-        "typescript": "^5.3.3"
+        "@vscode/vsce": "^3.6",
+        "esbuild": "^0.25.6",
+        "typescript": "^5.8.3"
     },
     "engines": {
         "vscode": "^1.78.0"
