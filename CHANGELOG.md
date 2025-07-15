@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.2 - 2025-07-15
+
+- Bump pygls to `v2.0a5`
+- Bump Python to `v3.13.5`
+
 ## v0.2.1 - 2024-11-08
 
 - Fix URI handling in vscode.dev

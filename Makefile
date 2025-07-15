@@ -1,4 +1,4 @@
-PYTHON_VERSION=3.13.0
+PYTHON_VERSION=3.13.5
 WASI_VERSION=wasi_sdk-24
 
 
@@ -30,16 +30,6 @@ wasm/lib.dir.json: wasm/python.wasm requirements.txt node_modules/.installed
 		--python-version "3.13" \
 		--upgrade \
 		-r requirements.txt
-
-	pip install \
-		--target wasm/lib/python3.13/site-packages \
-		--only-binary :all: \
-		--implementation py \
-		--abi none \
-		--platform any \
-		--python-version "3.13" \
-		--upgrade \
-		git+https://github.com/openlawlibrary/pygls.git@main
 
 	npx dir-dump wasm/lib/ --out wasm/lib.dir.json
 
