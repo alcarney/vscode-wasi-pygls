@@ -32,6 +32,8 @@ wasm/lib.dir.json: wasm/python.wasm requirements.txt node_modules/.installed
 		--upgrade \
 		-r requirements.txt
 
+	uv run --python $(PY) python -m compileall wasm/lib/python$(PY)/
+
 	npx dir-dump wasm/lib/ --out wasm/lib.dir.json
 
 # Generic rule for converting requirements.in files to to requirements.txt
