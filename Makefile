@@ -21,9 +21,11 @@ wasm/python.wasm:
 
 	rm /tmp/python-$(PYTHON_VERSION)-$(WASI_VERSION).zip
 
-wasm/lib.dir.json: wasm/python.wasm requirements.txt node_modules/.installed
+wasm/lib/python$(PY)/site-packages/libs.zip: wasm/python.wasm requirements.txt
+	$(eval TMPDIR := $(shell mktemp -d))
+	@echo Using $(TMPDIR)
 	pip install \
-		--target wasm/lib/python$(PY)/site-packages \
+		--target $(TMPDIR) \
 		--only-binary :all: \
 		--implementation py \
 		--abi none \
@@ -32,9 +34,15 @@ wasm/lib.dir.json: wasm/python.wasm requirements.txt node_modules/.installed
 		--upgrade \
 		-r requirements.txt
 
-	uv run --python $(PY) python -m compileall wasm/lib/python$(PY)/
+	# To avoid 100s of network requests compile site-packages into a .zip
+	uv run --python $(PY) python -m compileall $(TMPDIR)
+	cd $(TMPDIR) && zip -r0 ../libs.zip .
+	mv $(TMPDIR)/../libs.zip $@
 
+wasm/lib.dir.json: wasm/lib/python$(PY)/site-packages/libs.zip node_modules/.installed
+	# The WASI runtime needs an index of available files
 	npx dir-dump wasm/lib/ --out wasm/lib.dir.json
+	-rm -r $(TMPDIR)
 
 # Generic rule for converting requirements.in files to to requirements.txt
 %.txt: %.in

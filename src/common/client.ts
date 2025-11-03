@@ -136,7 +136,7 @@ export class PyglsClient {
             ],
             env: {
                 PYTHONUNBUFFERED: '1',
-                PYTHONPATH: '/workspace',
+                PYTHONPATH: '/workspace:/usr/local/lib/python3.14/site-packages/libs.zip',
             },
             args: [serverPath]
         }
