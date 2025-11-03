@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.0 - 2025-11-05
+
+- Bump pygls to `v2.0`
+- Bump Python to 3.14
+
 ## v0.2.2 - 2025-07-15
 
 - Bump pygls to `v2.0a5`

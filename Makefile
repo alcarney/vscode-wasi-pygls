@@ -1,5 +1,5 @@
-PYTHON_VERSION=3.13.5
 PY=3.14
+PYTHON_VERSION=$(PY).0
 WASI_VERSION=wasi_sdk-24
 
 
@@ -23,12 +23,12 @@ wasm/python.wasm:
 
 wasm/lib.dir.json: wasm/python.wasm requirements.txt node_modules/.installed
 	pip install \
-		--target wasm/lib/python3.13/site-packages \
+		--target wasm/lib/python$(PY)/site-packages \
 		--only-binary :all: \
 		--implementation py \
 		--abi none \
 		--platform any \
-		--python-version "3.13" \
+		--python-version "$(PY)" \
 		--upgrade \
 		-r requirements.txt
 
