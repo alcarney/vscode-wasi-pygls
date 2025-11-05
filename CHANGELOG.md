@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.1 - 2025-11-05 [pre-release]
+
+- Experiment with distributing `site-packages/` as a .zip [#12](https://github.com/alcarney/vscode-wasi-pygls/issues/12)
+
 ## v0.3.0 - 2025-11-05
 
 - Bump pygls to `v2.0`
